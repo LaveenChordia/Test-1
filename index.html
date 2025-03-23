@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Solver </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+
+</head>
+<body>
+    <h1>Sudoku Solver by Laveen</h1>
+    <div class="container">
+        <form id="sudokuForm">
+            <div class="grid" id="sudokuGrid"></div>
+            <button type="submit">Solve Sudoku</button>
+            <button type="button" onclick="clearGrid()">Clear Grid</button>
+        </form>
+        <pre id="output"></pre>
+    </div>
+
+    <script>
+        const form = document.getElementById('sudokuForm');
+        const output = document.getElementById('output');
+        const grid = document.getElementById('sudokuGrid');
+
+        
+        function createGrid() {
+            let table = '<table>';
+            for (let i = 0; i < 9; i++) {
+                table += '<tr>';
+                for (let j = 0; j < 9; j++) {
+                    table += `
+                        <td>
+                            <input type="number" min="0" max="9" name="cell${i}${j}" placeholder="0" class="cell">
+                        </td>
+                    `;
+                }
+                table += '</tr>';
+            }
+            table += '</table>';
+            grid.innerHTML = table;
+        }
+
+        
+        function clearGrid() {
+            const cells = document.querySelectorAll('.cell');
+            cells.forEach(cell => {
+                cell.value = '';
+            });
+            output.textContent = '';
+        }
+
+        createGrid(); 
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(form);
+            const data = {};
+
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    const cellValue = formData.get(`cell${i}${j}`) || "0";
+                    data[`cell${i}${j}`] = cellValue;
+                }
+            }
+
+            try {
+                const response = await fetch('http://127.0.0.1:5000/solve', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                output.textContent = result.solution || result.message;
+            } catch (error) {
+                output.textContent = "Error solving Sudoku. Please try again.";
+                console.error("Error:", error);
+            }
+        });
+    </script>
+</body>
+</html>
